@@ -1,19 +1,31 @@
 const express = require('express');
+const config = require('config');
 const connectDB = require('./config/db');
 const cors = require('cors');
 const path = require('path');
 const app = express();
+const consoleErrorColor = "\x1b[31m%s\x1b[0m";
 
 //Connect To DB
-connectDB();
+if(config.get('mongoURI')) {
+    connectDB();
+} else {
+    console.log(consoleErrorColor, 'DB is not connected')
+}
+
 
 //Init Middleware
 app.use(express.json({ extended:false }));
 app.use(cors({ origin: true, credentials: true }));
 
 // Define routes
-app.use('/api/users', require('./routes/api/users'));
-app.use('/api/auth', require('./routes/api/auth'));
+if(config.get('mongoURI')) {
+    app.use('/api/users', require('./routes/api/users'));
+    app.use('/api/auth', require('./routes/api/auth'));
+} else {
+    console.error(consoleErrorColor, 'Routes dependent of DB cannot be initialized into app')
+}
+
 
 // Serve static assets in production
 if(process.env.NODE_ENV === 'production') {
